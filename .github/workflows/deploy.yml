@@ -1,0 +1,24 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: SSH and Deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/studynotion_thefinal/server
+            git pull origin main
+            docker build -t studynotion-server .
+            docker stop $(docker ps -q --filter ancestor=studynotion-server) || true
+            docker run -d -p 4000:4000 --env-file . env studynotion-server
