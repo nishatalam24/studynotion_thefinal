@@ -56,6 +56,12 @@ app.get("/", (req, res) => {
 	});
 });
 
+app.get("/cicdtest", (req, res) => {
+	return res.json({
+		success: true,
+		message: "Your server is up and running ...",
+	});
+});
 // Listening to the server
 app.listen(PORT, () => {
 	console.log(`App is listening at ${PORT}`);
