@@ -71,7 +71,3 @@
 // //testubg ci/cd pipeline
 
 // BUGGY CODE - Missing closing bracket
-app.get("/bugtest", (req, res) => {
-    return res.json({
-        success: true
-    // ← Missing }); here! 
