@@ -19,6 +19,7 @@ jobs:
           script: |
             cd ~/studynotion_thefinal/server
             git pull origin main
-            docker build -t studynotion-server .
-            docker stop $(docker ps -q --filter ancestor=studynotion-server) || true
-            docker run -d -p 4000:4000 --env-file . env studynotion-server
+            docker build -t studynotion-server . 
+            docker stop studynotion-container || true
+            docker rm studynotion-container || true
+            docker run -d --name studynotion-container -p 4000:4000 --env-file .env studynotion-server
