@@ -24,4 +24,4 @@ jobs:
             docker rm studynotion-container 2>/dev/null || true
             docker container prune -f
             docker image prune -f
-            docker run -d --name studynotion-container -p 4000:4000 --env-file . env studynotion-server
+            docker run -d --name studynotion-container -p 4000:4000 --env-file .env studynotion-server
