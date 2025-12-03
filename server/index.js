@@ -71,5 +71,5 @@
 //testubg ci/cd pipeline
 
 
-app.get("/cicdtest", (req, res) => {
-	return res.json({
+// app.get("/cicdtest", (req, res) => {
+// 	return res.json({
