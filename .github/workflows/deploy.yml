@@ -1,3 +1,63 @@
+# name: Deploy to Server
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+    
+#     steps:
+#       - name: SSH and Deploy
+#         uses: appleboy/ssh-action@v1
+#         with:
+#           host: ${{ secrets.SERVER_IP }}
+#           username: ubuntu
+#           key: ${{ secrets.SSH_PRIVATE_KEY }}
+#           script: |
+#             cd ~/studynotion_thefinal/server
+#             git pull origin main
+            
+#             # Build new image
+#             docker build -t studynotion-server-new .
+            
+#             # Start new container on different port for testing
+#             docker stop test-container 2>/dev/null || true
+#             docker rm test-container 2>/dev/null || true
+#             docker run -d --name test-container -p 4001:4000 --env-file .env studynotion-server-new
+            
+#             # Wait for container to start
+#             sleep 10
+            
+#             # Health check - verify app is running! 
+#             if curl -f http://localhost:4001/ ; then
+#               echo "✅ Health check passed!   Deploying..."
+              
+#               # Stop old production container
+#               docker stop studynotion-container 2>/dev/null || true
+#               docker rm studynotion-container 2>/dev/null || true
+              
+#               # Stop test container
+#               docker stop test-container
+#               docker rm test-container
+              
+#               # Cleanup
+#               docker container prune -f
+#               docker image prune -f
+              
+#               # Start new production container
+#               docker run -d --name studynotion-container -p 4000:4000 --env-file .env studynotion-server-new
+              
+#               echo "✅ Deployment successful!"
+#             else
+#               echo "❌ Health check FAILED!  Keeping old version."
+#               docker stop test-container 2>/dev/null || true
+#               docker rm test-container 2>/dev/null || true
+#               exit 1
+#             fi
+
 name: Deploy to Server
 
 on:
@@ -20,40 +80,47 @@ jobs:
             cd ~/studynotion_thefinal/server
             git pull origin main
             
+            # Stop old containers to free memory BEFORE building
+            docker stop studynotion-container 2>/dev/null || true
+            docker stop test-container 2>/dev/null || true
+            
+            # Clean up to free memory
+            docker container prune -f
+            docker image prune -f
+            
             # Build new image
             docker build -t studynotion-server-new .
             
-            # Start new container on different port for testing
+            # Start test container with memory limit
+            docker rm test-container 2>/dev/null || true
+            docker run -d --name test-container -p 4001:4000 --memory=400m --env-file .env studynotion-server-new
+            
+            # Wait longer for startup
+            sleep 20
+            
+            # Health check with retries
+            for i in 1 2 3 4 5; do
+              if curl -f http://localhost:4001/ 2>/dev/null; then
+                echo "✅ Health check passed! Deploying..."
+                
+                docker stop test-container
+                docker rm test-container
+                
+                # Start production container with memory limit
+                docker run -d --name studynotion-container -p 4000:4000 --memory=400m --env-file .env studynotion-server-new
+                
+                echo "✅ Deployment successful!"
+                exit 0
+              fi
+              echo "Attempt $i failed, waiting..."
+              sleep 5
+            done
+            
+            echo "❌ Health check FAILED!"
+            docker logs test-container
             docker stop test-container 2>/dev/null || true
             docker rm test-container 2>/dev/null || true
-            docker run -d --name test-container -p 4001:4000 --env-file .env studynotion-server-new
             
-            # Wait for container to start
-            sleep 10
-            
-            # Health check - verify app is running! 
-            if curl -f http://localhost:4001/ ; then
-              echo "✅ Health check passed!   Deploying..."
-              
-              # Stop old production container
-              docker stop studynotion-container 2>/dev/null || true
-              docker rm studynotion-container 2>/dev/null || true
-              
-              # Stop test container
-              docker stop test-container
-              docker rm test-container
-              
-              # Cleanup
-              docker container prune -f
-              docker image prune -f
-              
-              # Start new production container
-              docker run -d --name studynotion-container -p 4000:4000 --env-file .env studynotion-server-new
-              
-              echo "✅ Deployment successful!"
-            else
-              echo "❌ Health check FAILED!  Keeping old version."
-              docker stop test-container 2>/dev/null || true
-              docker rm test-container 2>/dev/null || true
-              exit 1
-            fi
+            # Restart old production container
+            docker run -d --name studynotion-container -p 4000:4000 --memory=400m --env-file .env studynotion-server-new
+            exit 1
