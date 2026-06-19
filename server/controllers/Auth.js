@@ -289,3 +289,16 @@ exports.changePassword = async (req, res) => {
     })
   }
 }
+
+// // For testing only - remove the test code at the bottom
+// const generateToken = (payload, secret, expiresIn = "24h") => {
+//   return jwt.sign(payload, secret, { expiresIn })
+// }
+
+// // Test with a hardcoded secret (remove after testing)
+// const token = generateToken(
+//   { email: "nishatalam@gmail.com", id: "1234", role: "student" },
+//   "your-temp-secret-key",
+//   "24h"
+// )
+// console.log(token)

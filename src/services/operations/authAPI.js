@@ -83,6 +83,13 @@ export function signUp(
   }
 }
 
+export function verifyEmail() {
+
+console.log("VERIFY EMAIL CALLED............")
+
+}
+
+
 export function login(email, password, navigate) {
   return async (dispatch) => {
     const toastId = toast.loading("Loading...")

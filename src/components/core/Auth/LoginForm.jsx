@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux"
 import { Link, useNavigate } from "react-router-dom"
 
 import { login } from "../../../services/operations/authAPI"
+import { verifyEmail } from "../../../services/operations/authAPI"
 
 function LoginForm() {
   const navigate = useNavigate()
@@ -24,9 +25,11 @@ function LoginForm() {
     }))
   }
 
+
   const handleOnSubmit = (e) => {
     e.preventDefault()
     dispatch(login(email, password, navigate))
+
   }
 
   return (
